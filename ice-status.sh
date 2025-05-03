@@ -51,6 +51,17 @@ if [[ -n "$delayReason" ]]; then
   printf "| 🔴 Grund Verspätung  : %-30s |\n" "$delayReason"
 fi
 echo "+----------------------------------------------------------+"
+# --- Sonderanzeige für Kassel-Wilhelmshöhe ---
+kw_stop=$(echo "$trip" | jq -r '.trip.stops[] | select(.station.name == "Kassel-Wilhelmshöhe")')
+
+if [[ -n "$kw_stop" ]]; then
+  kw_arr=$(echo "$kw_stop" | jq -r '.timetable.actualArrivalTime')
+  kw_delay=$(echo "$kw_stop" | jq -r '.timetable.arrivalDelay // ""')
+  kw_time=$(date -r $((kw_arr / 1000)) +"%H:%M")
+  echo ""
+  echo "📌 Kassel-Wilhelmshöhe: Ankunft geplant um $kw_time ${kw_delay:+($kw_delay)}"
+fi
+
 # --- Spezi-Verfügbarkeitsanzeige ---
 products=$(curl -s https://iceportal.de/bap/api/products)
 
