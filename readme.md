@@ -31,7 +31,9 @@ Weil was bringt dir 300 km/h, wenn du mit Cola Zero fährst?
 ```bash
 git clone https://github.com/JanBuegel/SpeziTrack.git
 cd spezitrack
-chmod +x ice-status.sh'''
+chmod +x ice-status.sh```
+
+---
 
 ## Usage
 watch -n 30 "./ice-status.sh '{Zielbahnhof}'"
