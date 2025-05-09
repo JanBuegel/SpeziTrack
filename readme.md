@@ -31,9 +31,49 @@ Weil was bringt dir 300 km/h, wenn du mit Cola Zero fährst?
 ```bash
 git clone https://github.com/JanBuegel/SpeziTrack.git
 cd spezitrack
-chmod +x ice-status.sh```
+chmod +x ice-status.sh
+```
 
 ---
 
-## Usage
-watch -n 30 "./ice-status.sh '{Zielbahnhof}'"
+## ▶️ Usage
+
+### Standard (zeigt Kassel-Wilhelmshöhe):
+
+```bash
+watch -n 30 ./ice-status.sh
+```
+
+### Mit Wunschbahnhof (z.B. Fulda):
+
+```bash
+watch -n 30 ./ice-status.sh "Fulda"
+```
+
+---
+
+## 📸 Beispielausgabe
+
+```
++----------------------------------------------------------+
+| ICE 685 – 2025-05-03
++----------------------------------------------------------+
+| 📍 Letzter Halt      : Hannover Hbf
+| ⏭️  Nächster Halt     : Göttingen
+| 🕓 Ankunft (soll/ist): 21:24 (+24)
+| 🕒 Abfahrt (soll/ist): 21:26 (+24)
+| 🚬 Aufenthalt        : 2 min
+| 🏁 Endstation        : München Hbf
+| 💨 Geschwindigkeit   :  70 km/h
+| 🔴 Grund Verspätung  : Verspätung eines vorausfahrenden Zuges
++----------------------------------------------------------+
+🥤 Krombacher Spezi ist VERFÜGBAR!
+📌 Kassel-Wilhelmshöhe: Ankunft geplant um 21:42 (+23)
+```
+
+---
+
+## 📜 Lizenz
+
+MIT.  
+Benutzung auf eigene Gefahr – besonders im Raucherbereich.
