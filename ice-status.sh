@@ -4,6 +4,8 @@
 TRIP_ENDPOINT="https://iceportal.de/api1/rs/tripInfo/trip"
 STATUS_ENDPOINT="https://iceportal.de/api1/rs/status"
 
+ZIEL_BAHNHOF="${1:-Kassel-Wilhelmshöhe}"
+
 # JSON holen
 trip=$(curl -s "$TRIP_ENDPOINT")
 status=$(curl -s "$STATUS_ENDPOINT")
@@ -51,15 +53,16 @@ if [[ -n "$delayReason" ]]; then
   printf "| 🔴 Grund Verspätung  : %-30s |\n" "$delayReason"
 fi
 echo "+----------------------------------------------------------+"
-# --- Sonderanzeige für Kassel-Wilhelmshöhe ---
-kw_stop=$(echo "$trip" | jq -r '.trip.stops[] | select(.station.name == "Kassel-Wilhelmshöhe")')
 
-if [[ -n "$kw_stop" ]]; then
-  kw_arr=$(echo "$kw_stop" | jq -r '.timetable.actualArrivalTime')
-  kw_delay=$(echo "$kw_stop" | jq -r '.timetable.arrivalDelay // ""')
-  kw_time=$(date -r $((kw_arr / 1000)) +"%H:%M")
+# --- Sonderanzeige für Wunschbahnhof ---
+fav_stop=$(echo "$trip" | jq -r --arg name "$ZIEL_BAHNHOF" '.trip.stops[] | select(.station.name == $name)')
+
+if [[ -n "$fav_stop" ]]; then
+  fav_arr=$(echo "$fav_stop" | jq -r '.timetable.actualArrivalTime')
+  fav_delay=$(echo "$fav_stop" | jq -r '.timetable.arrivalDelay // ""')
+  fav_time=$(date -r $((fav_arr / 1000)) +"%H:%M")
   echo ""
-  echo "📌 Kassel-Wilhelmshöhe: Ankunft geplant um $kw_time ${kw_delay:+($kw_delay)}"
+  echo "📌 $ZIEL_BAHNHOF: Ankunft geplant um $fav_time ${fav_delay:+($fav_delay)}"
 fi
 
 # --- Spezi-Verfügbarkeitsanzeige ---
