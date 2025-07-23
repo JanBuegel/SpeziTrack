@@ -53,6 +53,8 @@ if [[ -n "$delayReason" ]]; then
   printf "| 🔴 Grund Verspätung  : %-30s |\n" "$delayReason"
 fi
 echo "+----------------------------------------------------------+"
+printf "| 🚆 Bahn Expert       : https://bahn.expert/details/%s/ |\n" "$(echo $train | sed 's/ /%20/')"
+echo "+----------------------------------------------------------+"
 
 # --- Sonderanzeige für Wunschbahnhof ---
 fav_stop=$(echo "$trip" | jq -r --arg name "$ZIEL_BAHNHOF" '.trip.stops[] | select(.station.name == $name)')
