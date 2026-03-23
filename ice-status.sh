@@ -37,45 +37,64 @@ lastStopName=$(echo "$trip" | jq -r --arg eva "$lastEva" '.trip.stops[] | select
 # Aufenthalt berechnen
 standMin=$(( (depEpoch - arrEpoch) / 60000 ))
 
-# Anzeige
-echo ""
-echo "+----------------------------------------------------------+"
-printf "| ICE %s – %s\n" "$train" "$date"
-echo "+----------------------------------------------------------+"
-printf "| 📍 Letzter Halt      : %-30s |\n" "$lastStopName"
-printf "| ⏭️  Nächster Halt     : %-30s |\n" "$nextName"
-printf "| 🕓 Ankunft (soll/ist): %-20s %-5s |\n" "$arrTime" "$arrDelay"
-printf "| 🕒 Abfahrt (soll/ist): %-20s %-5s |\n" "$depTime" "$depDelay"
-printf "| 🚬 Aufenthalt        : %-30s |\n" "${standMin} min"
-printf "| 🏁 Endstation        : %-30s |\n" "$final"
-printf "| 💨 Geschwindigkeit   : %3s km/h                      |\n" "$speed"
-if [[ -n "$delayReason" ]]; then
-  printf "| 🔴 Grund Verspätung  : %-30s |\n" "$delayReason"
-fi
-echo "+----------------------------------------------------------+"
-printf "| 🚆 Bahn Expert       : https://bahn.expert/details/%s/ |\n" "$(echo $train | sed 's/ /%20/')"
-echo "+----------------------------------------------------------+"
-
-# --- Sonderanzeige für Wunschbahnhof ---
+# Wunschbahnhof
 fav_stop=$(echo "$trip" | jq -r --arg name "$ZIEL_BAHNHOF" '.trip.stops[] | select(.station.name == $name)')
 
+# Spezi-Verfügbarkeit
+products=$(curl -s https://iceportal.de/bap/api/products)
+spezi_status=$(echo "$products" | jq -r '.[] | select(.ecmId == 13294226) | .available')
+
+# Bahn Expert URL
+bahn_expert_url="https://bahn.expert/details/$(echo "$train" | sed 's/ /%20/')/"
+
+# --- Ausgabe ---
+SEP="+----------------------------------------------------------+"
+
+box() {
+  local content="$1"
+  local vis
+  vis=$(printf '%s' "$content" | python3 -c "
+import unicodedata, sys
+def w(c):
+    cp = ord(c)
+    if cp == 0xFE0F: return 0                                    # Variation Selector-16
+    if unicodedata.category(c).startswith('M'): return 0         # Combining marks (e.g. decomposed umlauts)
+    if unicodedata.east_asian_width(c) in ('W', 'F'): return 2
+    if 0x2300 <= cp <= 0x2BFF or 0x1F000 <= cp <= 0x1FFFF: return 2
+    return 1
+text = unicodedata.normalize('NFC', sys.stdin.read())            # normalise ü/ö/ä to single code points
+print(sum(w(c) for c in text))
+")
+  local pad=$(( 56 - vis ))
+  (( pad < 0 )) && pad=0
+  printf "| %s%-${pad}s |\n" "$content" ""
+}
+
+echo ""
+echo "$SEP"
+box "🚆 ICE $train  –  $date"
+echo "$SEP"
+box "📍 Letzter Halt      : $lastStopName"
+box "⏭️  Nächster Halt     : $nextName"
+box "🕓 Ankunft (soll/ist): $arrTime${arrDelay:+ ($arrDelay)}"
+box "🕒 Abfahrt (soll/ist): $depTime${depDelay:+ ($depDelay)}"
+box "🚬 Aufenthalt        : ${standMin} min"
+box "🏁 Endstation        : $final"
+box "💨 Geschwindigkeit   : $speed km/h"
+[[ -n "$delayReason" ]] && box "🔴 Grund Verspätung  : $delayReason"
+echo "$SEP"
+box "🔗 Bahn Expert: $bahn_expert_url"
+echo "$SEP"
 if [[ -n "$fav_stop" ]]; then
   fav_arr=$(echo "$fav_stop" | jq -r '.timetable.actualArrivalTime')
   fav_delay=$(echo "$fav_stop" | jq -r '.timetable.arrivalDelay // ""')
   fav_time=$(date -r $((fav_arr / 1000)) +"%H:%M")
-  echo ""
-  echo "📌 $ZIEL_BAHNHOF: Ankunft geplant um $fav_time ${fav_delay:+($fav_delay)}"
+  box "📌 $ZIEL_BAHNHOF: Ankunft $fav_time${fav_delay:+ ($fav_delay)}"
 fi
-
-# --- Spezi-Verfügbarkeitsanzeige ---
-products=$(curl -s https://iceportal.de/bap/api/products)
-
-spezi_status=$(echo "$products" | jq -r '.[] | select(.ecmId == 13294226) | .available')
-
 if [[ "$spezi_status" == "true" ]]; then
-  echo "🥤 Krombacher Spezi ist VERFÜGBAR!"
+  box "🥤 Krombacher Spezi ist VERFÜGBAR!"
 else
-  echo "❌ Krombacher Spezi leider nicht verfügbar."
+  box "❌ Krombacher Spezi leider nicht verfügbar."
 fi
-
+echo "$SEP"
 echo ""
